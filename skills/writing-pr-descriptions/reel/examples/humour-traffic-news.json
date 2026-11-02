@@ -1,0 +1,91 @@
+{
+  "title": "Traffic and travel: resizes diverted",
+  "tone": "humour",
+  "humour": {
+    "overlay": "./overlays/traffic-news.js",
+    "ticker": [
+      "RESIZES DIVERTED VIA RUST-RESIZER WHILE THE FLAG IS ON",
+      "CROPS: NO CHANGE",
+      "EMPTY REPLIES: SAGA ADDS ID AND STATUS"
+    ]
+  },
+  "hook": "Diversion in place for resizes.",
+  "look": "paper",
+  "music": "playful curious explainer music, light pizzicato strings, soft marimba and warm synth pad, gentle groove, 100 bpm",
+  "scenes": [
+    {
+      "type": "custom",
+      "name": "bus-diversion",
+      "src": "./scenes/bus-diversion.js",
+      "heading": "The morning run",
+      "humour": "Diversion on the resize route",
+      "narrator": "Traffic desk",
+      "voice": "bm_george",
+      "labels": {
+        "old": "BFF",
+        "new": "rust-resizer",
+        "stop": "saga",
+        "flag": "resize flag",
+        "carries": "id, width, height",
+        "reply": "200, empty body",
+        "fills": "+ id, status"
+      },
+      "lines": [
+        {
+          "say": "Traffic news. With the flag on, resizes divert to rust-resizer.",
+          "sfx": [
+            {
+              "name": "click",
+              "at": 0.15
+            },
+            {
+              "name": "pop",
+              "at": 0.3
+            }
+          ]
+        },
+        {
+          "say": "Each carries image id, width and height. Crops stay on the BFF.",
+          "sfx": [
+            {
+              "name": "pop",
+              "at": 0.12
+            }
+          ]
+        },
+        {
+          "say": "The depot replies empty. The saga adds id and status.",
+          "sfx": [
+            {
+              "name": "pop",
+              "at": 0.07
+            },
+            {
+              "name": "ping",
+              "at": 0.67
+            }
+          ]
+        },
+        {
+          "say": "Reviewers: flag off, and resizes take the old road.",
+          "sfx": [
+            {
+              "name": "click",
+              "at": 0.1
+            },
+            {
+              "name": "whoosh-short",
+              "at": 0.2,
+              "vol": 0.2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "card",
+      "text": "Resizes: diverted.",
+      "sub": "Crops: no change."
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"></head>
+<body>
+<template>
+<style>
+  #root { position: absolute; inset: 0; overflow: hidden; }
+  /* The sorting office's notice board: the real hunk pinned up, with index cards beside it. */
+  .cd-wall { position: absolute; inset: 0; background: radial-gradient(1100px 760px at 34% 30%, #7c5233 0%, #432a1b 55%, #1e130c 100%); }
+  .cd-cork { position: absolute; left: 60px; top: 150px; width: 1800px; height: 760px; border-radius: 14px; background-color: #b88a57;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='c'><feTurbulence type='fractalNoise' baseFrequency='1.3' numOctaves='2' seed='9'/><feColorMatrix values='0 0 0 0 .35  0 0 0 0 .22  0 0 0 0 .1  0 0 0 .6 0'/></filter><rect width='200' height='200' filter='url(%23c)'/></svg>");
+    box-shadow: inset 0 0 0 18px #5a3a24, inset 0 0 60px rgba(0,0,0,.4), 0 30px 60px rgba(0,0,0,.5); }
+  .cd-pin { position: absolute; width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ff8a7a, #b3261e 70%); box-shadow: 0 4px 6px rgba(0,0,0,.4); }
+  .cd-sheet { position: absolute; left: 110px; top: 214px; width: 1120px; height: 630px; background: #0e1116; box-shadow: 0 20px 40px rgba(0,0,0,.5); transform: rotate(-.6deg); }
+  .cd-card { position: absolute; width: 470px; padding: 26px 30px; background: #fbf6ea; box-shadow: 0 14px 26px rgba(0,0,0,.4); color: #2b1c12; }
+  .cd-card::before { content: ""; position: absolute; left: 0; right: 0; top: 64px; height: 2px; background: #d9564a; opacity: .6; }
+  .cd-card h3 { margin: 0 0 26px; font: 600 26px/1 "Work Sans", sans-serif; letter-spacing: .16em; text-transform: uppercase; color: #7a5a3c; }
+  .cd-fig { font: 500 150px/.9 "Fraunces", Georgia, serif; letter-spacing: -.02em; }
+  .cd-fig em { font-style: normal; font-size: 92px; color: #b3261e; margin-left: 18px; }
+  .cd-row { display: flex; gap: 18px; align-items: baseline; margin-top: 12px; font: 500 28px/1.3 "Work Sans", sans-serif; }
+  .cd-row b { min-width: 118px; font: 700 20px/1 "Work Sans", sans-serif; letter-spacing: .14em; color: #2f5b55; }
+  .cd-head { position: absolute; left: 96px; top: 64px; font: 500 64px/1 "Fraunces", Georgia, serif; color: #f4ead8; }
+  .cd-head span { display: inline-block; }
+  .cd-lamp { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: soft-light; background: radial-gradient(1200px 800px at 40% 40%, rgba(255,214,160,.7), rgba(255,214,160,0) 70%); }
+</style>
+<div id="root" class="f-code" data-composition-id="code" data-width="1920" data-height="1080">
+  <div class="cd-wall"></div>
+  <div class="cd-cork"></div>
+  <div class="cd-sheet"></div>
+  <div class="cd-card" data-c="count" style="left:1300px;top:230px;transform:rotate(2deg)"><h3>The hunk</h3><div class="cd-fig"><span data-f="add">+5</span><em>−1</em></div></div>
+  <div class="cd-card" data-c="calls" style="left:1290px;top:560px;transform:rotate(-1.5deg)"><h3>Sorting rule</h3>
+    <div class="cd-row" data-r="on"><b>FLAG ON</b>postResizeImage(id)</div><div class="cd-row" data-r="off"><b>FLAG OFF</b>saveImage, as before</div></div>
+  <div class="cd-pin" style="left:660px;top:200px"></div><div class="cd-pin" style="left:1525px;top:216px"></div><div class="cd-pin" style="left:1515px;top:548px"></div>
+  <div class="cd-head"><span>The</span> <span>sorting</span> <span>rule,</span> <span>in</span> <span>the</span> <span>saga</span></div>
+  <div class="cd-lamp"></div>
+</div>
+<script>
+(function () {
+  var root = document.querySelector('.f-code'), q = function (s) { return root.querySelector(s); }, qa = function (s) { return root.querySelectorAll(s); };
+  var F = window.__REEL.code, at = F.cue, tl = gsap.timeline({ paused: true }), S = 'power3.out';
+  function pinUp(el, t) { tl.fromTo(el, { opacity: 0, y: -40, rotation: '+=6' }, { opacity: 1, y: 0, rotation: '-=6', duration: .55, ease: S }, t); }
+  tl.fromTo(qa('.cd-head span'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: .55, ease: S, stagger: .05 }, .1);
+  pinUp(q('.cd-sheet'), .15);
+  // The count lands as the voice says "checks"; the two outcomes as it says "picks".
+  var tChecks = at(0, 'checks'), tPicks = at(0, 'picks'), add = { v: 0 }, fig = q('[data-f="add"]');
+  pinUp(q('[data-c="count"]'), tChecks - .15);
+  tl.fromTo(add, { v: 0 }, { v: 5, duration: .6, ease: 'power2.out', onUpdate: function () { fig.textContent = '+' + Math.round(add.v); } }, tChecks);
+  pinUp(q('[data-c="calls"]'), tPicks - .2);
+  tl.fromTo(q('[data-r="on"]'), { opacity: 0, x: -16 }, { opacity: 1, x: 0, duration: .45, ease: S }, tPicks);
+  tl.fromTo(q('[data-r="off"]'), { opacity: 0, x: -16 }, { opacity: 1, x: 0, duration: .45, ease: S }, tPicks + .35);
+  tl.to({}, { duration: .01 }, F.duration - .01);
+  window.__timelines = window.__timelines || {};
+  window.__timelines.code = tl;
+})();
+</script>
+</template>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{
+  "title": "The technical challenge: resize",
+  "tone": "humour",
+  "humour": { "genre": "bakeoff" },
+  "hook": "Bakers, your time starts now.",
+  "look": "paper",
+  "music": "playful curious explainer music, light pizzicato strings, soft marimba and warm synth pad, gentle groove, 100 bpm",
+  "scenes": [
+    {
+      "type": "concept",
+      "kind": "pan",
+      "heading": "The technical challenge",
+      "humour": "Technical challenge: one resize",
+      "narrator": "Presenter",
+      "voice": "bf_emma",
+      "labels": {
+        "start": ["BFF save", "status: RESIZED"],
+        "steps": [{ "remove": "BFF save" }, { "add": "id, width, height", "role": "added" }, { "receipt": "id + status" }]
+      },
+      "lines": [
+        { "say": "Today's bake: a resize. Flag on, out goes the BFF save." },
+        { "say": "In go the image id, width and height, for rust-resizer." },
+        { "say": "It comes out empty. The saga adds id and status." },
+        { "say": "Judges' note: flag off is the old recipe. Crop is untouched.", "step": 9 }
+      ]
+    },
+    { "type": "card", "text": "Star diff.", "sub": "Flag off: the old recipe." }
+  ]
+}

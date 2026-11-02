@@ -1,0 +1,142 @@
+{
+  "title": "Resize moves to rust-resizer",
+  "coldOpen": false,
+  "chapters": false,
+  "look": "diorama",
+  "scenario": {
+    "world": "redirect-sticker",
+    "telling": "time-lapse",
+    "design": "diorama"
+  },
+  "music": {
+    "style": "jazz"
+  },
+  "scenes": [
+    {
+      "type": "frame",
+      "id": "open",
+      "src": "./open.html",
+      "hold": 2.6,
+      "lines": []
+    },
+    {
+      "type": "frame",
+      "id": "letter",
+      "src": "./letter.html",
+      "voice": "bm_george",
+      "transition": "zoom",
+      "lines": [
+        {
+          "say": "Today a resize saves the whole image through the BFF, with its status set to resized.",
+          "sfx": [
+            {
+              "name": "pop",
+              "word": "BFF",
+              "offset": 0.35
+            },
+            {
+              "name": "click-soft",
+              "word": "resized",
+              "offset": 0.1
+            }
+          ]
+        },
+        {
+          "say": "With the resize flag on, the saga calls rust-resizer instead.",
+          "sfx": [
+            {
+              "name": "click",
+              "word": "on"
+            },
+            {
+              "name": "pop",
+              "word": "instead",
+              "offset": 0.2
+            }
+          ]
+        },
+        {
+          "say": "It replies with an empty success, so the client fills in the id and status.",
+          "sfx": [
+            {
+              "name": "whoosh-short",
+              "word": "replies"
+            },
+            {
+              "name": "click-soft",
+              "word": "fills",
+              "offset": 0.1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "code",
+      "src": "./code.html",
+      "voice": "bm_george",
+      "transition": "push",
+      "hold": 1.4,
+      "lines": [
+        {
+          "say": "The saga checks the flag once, then picks the call."
+        }
+      ],
+      "blocks": [
+        {
+          "block": "code-diff",
+          "file": "resizeOrCropImage.sagas.ts",
+          "lang": "ts",
+          "box": [
+            96,
+            214,
+            1120
+          ],
+          "states": [
+            "function* resizeImage(image) {\n  yield call(saveImage, { ...image, status: 'RESIZED' });\n}",
+            "function* resizeImage(image) {\n  if (yield select(isRustResizeOn)) {\n    yield call(postResizeImage, image.id);\n  } else {\n    yield call(saveImage, { ...image, status: 'RESIZED' });\n  }\n}"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "check",
+      "src": "./check.html",
+      "voice": "bm_george",
+      "transition": "push",
+      "hold": 0.6,
+      "lines": [
+        {
+          "say": "To review: turn the flag off, crop still goes to the BFF, and errors still show a toast.",
+          "sfx": [
+            {
+              "name": "ping",
+              "word": "off",
+              "offset": 0.25
+            },
+            {
+              "name": "ping",
+              "word": "crop",
+              "offset": 0.25
+            },
+            {
+              "name": "ping",
+              "word": "errors",
+              "offset": 0.25
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "close",
+      "src": "./close.html",
+      "transition": "dip",
+      "hold": 2.8,
+      "lines": []
+    }
+  ]
+}

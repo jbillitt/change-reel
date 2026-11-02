@@ -1,0 +1,12 @@
+{
+  "name": "change-reel",
+  "description": "The change-reel plugin: PR descriptions, diagrams and local change-reel videos.",
+  "owner": { "name": "jbillitt" },
+  "plugins": [
+    {
+      "name": "change-reel",
+      "source": "./",
+      "description": "PR descriptions with gated Mermaid diagrams, review DMs and locally rendered change-reel videos."
+    }
+  ]
+}

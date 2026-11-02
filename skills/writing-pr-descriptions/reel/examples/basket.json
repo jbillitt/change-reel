@@ -1,0 +1,27 @@
+{
+  "title": "What a resize now carries",
+  "hook": "Same resize. New contents.",
+  "look": "infographic",
+  "music": "playful curious explainer music, light pizzicato strings, soft marimba and warm synth pad, gentle groove, 100 bpm",
+  "scenes": [
+    {
+      "type": "concept",
+      "kind": "basket",
+      "heading": "The resize request, at the till",
+      "narrator": "Narrator",
+      "voice": "bf_emma",
+      "labels": {
+        "total": "RESIZE",
+        "start": ["BFF save", "status RESIZED"],
+        "steps": [{ "remove": "BFF save" }, { "add": "id width height", "role": "added" }, { "receipt": ["RECEIPT", "id", "status", "added by saga"] }]
+      },
+      "lines": [
+        { "say": "With the flag on, a resize no longer uses the BFF save." },
+        { "say": "It carries the image id, width and height to rust-resizer." },
+        { "say": "The reply is empty, so the saga adds id and status." },
+        { "say": "Check: with the flag off, the old path stays. Crop is unchanged.", "step": 9 }
+      ]
+    },
+    { "type": "card", "text": "Same resize. New contents.", "sub": "Flag off: the old path." }
+  ]
+}

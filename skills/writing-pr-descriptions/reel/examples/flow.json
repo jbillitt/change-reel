@@ -1,0 +1,39 @@
+{
+  "title": "Resize moves to rust-resizer",
+  "hook": "Resize moves to rust-resizer.",
+  "look": "ink",
+  "music": "modern cinematic tech explainer, warm synth arpeggio, soft punchy drums, airy pads, uplifting and confident, 110 bpm",
+  "scenes": [
+    {
+      "type": "flow",
+      "heading": "One resize, two paths",
+      "narrator": "Narrator",
+      "voice": "bm_george",
+      "nodes": [
+        { "id": "ui", "label": "media-ui saga", "x": 0, "y": 1 },
+        { "id": "flag", "label": "resize flag", "kind": "switch", "role": "flag", "x": 1, "y": 1 },
+        { "id": "bff", "label": "Media BFF", "role": "changed", "x": 2, "y": 0 },
+        { "id": "api", "label": "rust-resizer", "role": "added", "x": 2, "y": 2 },
+        { "id": "acc", "label": "Media store", "kind": "store", "x": 3, "y": 1 }
+      ],
+      "edges": [
+        { "id": "in", "from": "ui", "to": "flag" },
+        { "id": "old", "from": "flag", "to": "bff", "label": "save, status RESIZED" },
+        { "id": "bacc", "from": "bff", "to": "acc", "label": "update" },
+        { "id": "new", "from": "flag", "to": "api", "role": "added", "label": "postResizeImage" },
+        { "id": "aacc", "from": "api", "to": "acc", "role": "added", "label": "update" }
+      ],
+      "lines": [
+        { "say": "Today a resize is a BFF save, status RESIZED.",
+          "do": [{ "travel": ["in", "old", "bacc"], "token": "resize", "at": 0.1 }] },
+        { "say": "With the resize flag on, the saga calls rust-resizer instead.",
+          "do": [{ "switch": "flag", "to": "new", "at": 0.15 }, { "draw": "new", "at": 0.25 }, { "retire": "old", "at": 0.4 }, { "draw": "aacc", "at": 0.55 }] },
+        { "say": "An empty 200 comes back, so the client sets id and status.",
+          "do": [{ "reply": "new", "text": "200 { }", "fill": "{ id, status: RESIZED }", "at": 0.1 }] },
+        { "say": "Check: flag off, crop on the BFF, error toasts.",
+          "do": [{ "travel": ["aacc"], "token": "update", "at": 0.05 }, { "pulse": "acc", "at": 0.3 }] }
+      ]
+    },
+    { "type": "card", "text": "Resize moves to rust-resizer.", "sub": "Flag off: the BFF path, unchanged.", "start_here": "resizeOrCropImage.sagas.ts" }
+  ]
+}

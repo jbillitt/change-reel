@@ -1,0 +1,41 @@
+{
+  "title": "Resize switches routes",
+  "tone": "humour",
+  "humour": { "genre": "sportscast" },
+  "hook": "And the resize goes wide!",
+  "music": "upbeat sports broadcast theme, driving drums, brass stabs, energetic stadium build, 128 bpm",
+  "scenes": [
+    {
+      "type": "flow",
+      "heading": "First half",
+      "humour": "SAGA FC v BFF UNITED",
+      "narrator": "Commentator",
+      "voice": "bm_george",
+      "nodes": [
+        { "id": "ui", "label": "media-ui saga", "x": 0, "y": 1 },
+        { "id": "flag", "label": "resize flag", "kind": "switch", "role": "flag", "x": 1, "y": 1 },
+        { "id": "bff", "label": "Media BFF", "role": "changed", "x": 2, "y": 0 },
+        { "id": "api", "label": "rust-resizer", "role": "added", "x": 2, "y": 2 },
+        { "id": "acc", "label": "Media store", "kind": "store", "x": 3, "y": 1 }
+      ],
+      "edges": [
+        { "id": "in", "from": "ui", "to": "flag" },
+        { "id": "old", "from": "flag", "to": "bff", "label": "the usual pass" },
+        { "id": "bacc", "from": "bff", "to": "acc", "label": "update" },
+        { "id": "new", "from": "flag", "to": "api", "role": "added", "label": "postResizeImage" },
+        { "id": "aacc", "from": "api", "to": "acc", "role": "added", "label": "update" }
+      ],
+      "lines": [
+        { "say": "The saga has a resize. Usual pass: a BFF save.",
+          "do": [{ "travel": ["in", "old", "bacc"], "token": "resize", "at": 0.1 }] },
+        { "say": "Resize flag's on! Change of play, straight to rust-resizer.",
+          "do": [{ "switch": "flag", "to": "new", "at": 0.15 }, { "draw": "new", "at": 0.25 }, { "retire": "old", "at": 0.4 }, { "draw": "aacc", "at": 0.55 }] },
+        { "say": "Empty reply. The saga fills in id and status. Lovely.",
+          "do": [{ "reply": "new", "text": "200 { }", "fill": "{ id, status: RESIZED }", "at": 0.1 }] },
+        { "say": "Flag off, and it's the old play. Crop never left the BFF.",
+          "do": [{ "travel": ["aacc"], "token": "update", "at": 0.05 }] }
+      ]
+    },
+    { "type": "card", "text": "Resize switches routes.", "sub": "The crowd goes mild." }
+  ]
+}

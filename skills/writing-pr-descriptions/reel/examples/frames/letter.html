@@ -1,0 +1,195 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"></head>
+<body>
+<template>
+<style>
+  #root { position: absolute; inset: 0; overflow: hidden; }
+  /* The room: a warm wall under a desk lamp. */
+  .lt-wall { position: absolute; inset: 0; background: radial-gradient(900px 620px at 22% 8%, #8a5a33 0%, #4a2f1e 45%, #24170f 100%); }
+  .lt-lamp { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: soft-light;
+    background: radial-gradient(1100px 760px at 30% 30%, rgba(255,214,160,.85), rgba(255,214,160,0) 70%); }
+  /* The tabletop, tilted away from the camera; everything that stands up counter-rotates. */
+  .lt-camera { position: absolute; inset: 0; transform-origin: 46% 64%; }
+  .lt-scene { position: absolute; inset: 0; perspective: 1500px; perspective-origin: 50% 0%; }
+  .lt-table { position: absolute; left: -240px; top: -270px; width: 2400px; height: 1400px; transform-origin: 50% 100%;
+    transform: rotateX(56deg); transform-style: preserve-3d; border-radius: 26px;
+    background-color: #2f5b55;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' seed='3'/><feColorMatrix values='0 0 0 0 .1  0 0 0 0 .2  0 0 0 0 .18  0 0 0 .55 0'/></filter><rect width='240' height='240' filter='url(%23f)'/></svg>");
+    box-shadow: inset 0 0 140px rgba(0,0,0,.45); }
+  .lt-roads { position: absolute; left: 0; top: 0; overflow: visible; }
+  .lt-up { position: absolute; transform-origin: 50% 100%; transform: rotateX(-56deg); }
+  .lt-shadow { position: absolute; border-radius: 50%; background: radial-gradient(closest-side, rgba(0,0,0,.45), rgba(0,0,0,0)); }
+  .lt-sign { display: inline-block; font: 600 34px/1 "Fraunces", Georgia, serif; color: #2b1c12; background: #f4ead8; padding: 10px 18px; border-radius: 6px;
+    box-shadow: 0 6px 0 #c9b79a, 0 14px 22px rgba(0,0,0,.35); white-space: nowrap; text-align: center; }
+  .lt-sign small { display: block; margin-top: 6px; font: 500 16px/1 "Work Sans", sans-serif; letter-spacing: .14em; text-transform: uppercase; color: #7a5a3c; }
+  .lt-env { width: 200px; height: 128px; }
+  .lt-tag { font: 600 24px/1.1 "Work Sans", sans-serif; color: #2b1c12; white-space: nowrap; }
+  .lt-caption { position: absolute; right: 86px; top: 60px; color: #f4ead8; text-align: right; }
+  .lt-kicker { font: 500 22px/1 "Work Sans", sans-serif; letter-spacing: .22em; text-transform: uppercase; color: #e8c79a; }
+  .lt-title { margin-top: 14px; font: 500 76px/1 "Fraunces", Georgia, serif; letter-spacing: -.01em; }
+  .lt-title span { display: inline-block; }
+  /* Tilt-shift: the near and far edges of the model fall out of focus. */
+  .lt-tilt { position: absolute; left: 0; right: 0; height: 260px; backdrop-filter: blur(7px); pointer-events: none; }
+  .lt-tilt.top { top: 0; -webkit-mask-image: linear-gradient(#000, transparent); mask-image: linear-gradient(#000, transparent); }
+  .lt-tilt.bot { bottom: 0; -webkit-mask-image: linear-gradient(transparent, #000); mask-image: linear-gradient(transparent, #000); }
+  .lt-vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 55%, transparent 55%, rgba(10,6,3,.55)); }
+</style>
+<div id="root" class="f-letter" data-composition-id="letter" data-width="1920" data-height="1080">
+  <div class="lt-wall"></div>
+  <div class="lt-camera">
+    <div class="lt-scene"><div class="lt-table">
+      <svg class="lt-roads" width="2400" height="1400" viewBox="0 0 2400 1400">
+        <!-- cork paths laid on the felt: postbox to the sorting desk, then to each address, then on to the archive -->
+        <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path data-r="in" d="M640 1200 C760 1100 860 1000 1000 930" stroke="#c9a978" stroke-width="56"/>
+          <path data-r="old" d="M1000 930 C900 760 760 560 720 420" stroke="#c9a978" stroke-width="56"/>
+          <path data-r="bacc" d="M720 420 C860 260 1060 200 1240 190" stroke="#c9a978" stroke-width="56"/>
+          <path data-r="new" d="M1000 930 C1200 900 1480 860 1680 760" stroke="#e8c48a" stroke-width="56" opacity="0"/>
+          <path data-r="aacc" d="M1680 760 C1620 520 1460 260 1300 190" stroke="#e8c48a" stroke-width="56" opacity="0"/>
+          <path d="M640 1200 C760 1100 860 1000 1000 930 M1000 930 C900 760 760 560 720 420 M720 420 C860 260 1060 200 1240 190"
+            stroke="#a8875a" stroke-width="3" stroke-dasharray="14 16" opacity=".55"/>
+        </g>
+      </svg>
+      <div class="lt-shadow" style="left:560px;top:1170px;width:160px;height:60px"></div>
+      <div class="lt-shadow" style="left:600px;top:390px;width:260px;height:80px"></div>
+      <div class="lt-shadow" style="left:1170px;top:160px;width:260px;height:80px"></div>
+      <div class="lt-shadow" data-n="api-shadow" style="left:1560px;top:730px;width:260px;height:80px"></div>
+      <div class="lt-shadow" style="left:940px;top:905px;width:130px;height:50px"></div>
+
+      <!-- the postbox where the saga posts the resize -->
+      <div class="lt-up" data-n="postbox" style="left:576px;top:960px;width:128px;height:240px">
+        <svg width="128" height="240" viewBox="0 0 128 240"><defs><linearGradient id="lt-pb" x1="0" x2="1"><stop offset="0" stop-color="#b3261e"/><stop offset=".55" stop-color="#d63a2e"/><stop offset="1" stop-color="#8e1c16"/></linearGradient></defs>
+          <rect x="14" y="40" width="100" height="196" rx="10" fill="url(#lt-pb)"/><ellipse cx="64" cy="42" rx="52" ry="22" fill="#c4302a"/><ellipse cx="64" cy="36" rx="46" ry="16" fill="#e2554a"/>
+          <rect x="30" y="84" width="68" height="10" rx="5" fill="#2b130f"/><rect x="40" y="120" width="48" height="34" rx="4" fill="#f4ead8"/><rect x="14" y="222" width="100" height="14" fill="#5c120e"/></svg>
+      </div>
+      <div class="lt-up" style="left:540px;top:1210px;width:200px;height:60px"><div class="lt-sign" style="font-size:24px">media-ui<small>resize saga</small></div></div>
+
+      <!-- the old address: a brick townhouse -->
+      <div class="lt-up" data-n="bff" style="left:590px;top:180px;width:260px;height:240px">
+        <svg width="260" height="240" viewBox="0 0 260 240"><path d="M20 90 L130 20 L240 90 Z" fill="#6b3a2a"/><rect x="34" y="88" width="192" height="152" fill="#a24b33"/>
+          <g fill="#7f3826">${''}</g><rect x="56" y="112" width="40" height="44" fill="#f2d79a"/><rect x="164" y="112" width="40" height="44" fill="#f2d79a"/>
+          <rect x="108" y="160" width="44" height="80" rx="4" fill="#3d2418"/><rect x="34" y="88" width="192" height="8" fill="#5a2c1f"/></svg>
+      </div>
+      <div class="lt-up" data-n="bff-sign" style="left:560px;top:420px;width:320px;height:70px;text-align:center"><div class="lt-sign">Media BFF<small>old address</small></div></div>
+
+      <!-- the archive both roads end at -->
+      <div class="lt-up" style="left:1170px;top:-40px;width:260px;height:230px">
+        <svg width="260" height="230" viewBox="0 0 260 230"><rect x="20" y="70" width="220" height="160" fill="#d9cdb4"/><path d="M10 74 L130 14 L250 74 Z" fill="#b7a782"/>
+          <g fill="#a8987a"><rect x="42" y="96" width="22" height="120"/><rect x="92" y="96" width="22" height="120"/><rect x="146" y="96" width="22" height="120"/><rect x="196" y="96" width="22" height="120"/></g></svg>
+      </div>
+      <div class="lt-up" style="left:1140px;top:196px;width:320px;height:70px;text-align:center"><div class="lt-sign">Media store<small>the archive</small></div></div>
+
+      <!-- the new address: a glass office, built when the flag goes on -->
+      <div class="lt-up" data-n="api" style="left:1550px;top:500px;width:260px;height:260px">
+        <svg width="260" height="260" viewBox="0 0 260 260"><defs><linearGradient id="lt-gl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9fd3d0"/><stop offset="1" stop-color="#3f7f86"/></linearGradient></defs>
+          <rect x="40" y="20" width="180" height="240" fill="url(#lt-gl)"/><g stroke="#e8f6f4" stroke-width="3" opacity=".7"><path d="M40 70 H220 M40 120 H220 M40 170 H220 M40 220 H220 M100 20 V260 M160 20 V260"/></g>
+          <rect x="40" y="20" width="180" height="10" fill="#2e5d63"/></svg>
+      </div>
+      <div class="lt-up" data-n="api-sign" style="left:1520px;top:770px;width:320px;height:70px;text-align:center"><div class="lt-sign">rust-resizer<small>new address</small></div></div>
+
+      <!-- the sorting desk with the resize flag: a signal arm that drops to "forward" -->
+      <div class="lt-up" data-n="flag" style="left:950px;top:740px;width:110px;height:190px">
+        <svg width="110" height="190" viewBox="0 0 110 190"><rect x="50" y="20" width="10" height="170" fill="#3a2a1e"/><rect x="34" y="176" width="42" height="14" rx="3" fill="#2a1d14"/>
+          <g class="lt-arm" style="transform-origin:55px 34px"><rect x="55" y="26" width="52" height="18" rx="3" fill="#f2c230"/><rect x="88" y="26" width="8" height="18" fill="#2b1c12"/></g>
+          <circle cx="55" cy="34" r="9" fill="#2b1c12"/></svg>
+      </div>
+      <div class="lt-up" data-n="flag-sign" style="left:930px;top:935px;width:150px;height:60px"><div class="lt-sign" style="font-size:22px">resize flag<small class="lt-flagstate">off</small></div></div>
+
+      <!-- the letter, and the reply postcard -->
+      <div class="lt-up" data-n="letter" style="left:0;top:0;width:200px;height:128px">
+        <svg class="lt-env" viewBox="0 0 150 96"><rect width="150" height="96" rx="6" fill="#fbf6ea" stroke="#c9b79a" stroke-width="2"/><path d="M4 6 L75 54 L146 6" fill="none" stroke="#c9b79a" stroke-width="2"/>
+          <rect x="110" y="12" width="26" height="30" fill="#d63a2e"/><text x="16" y="80" font-family="Work Sans" font-size="15" font-weight="600" fill="#2b1c12">RESIZE · Media BFF</text></svg>
+        <div class="lt-tag" data-n="resized" style="position:absolute;left:18px;top:24px;transform:rotate(-8deg);color:#b3261e;border:3px solid #b3261e;padding:3px 10px;font-size:21px;opacity:0">status: RESIZED</div>
+        <div data-n="sticker" style="position:absolute;left:-14px;top:-30px;transform:rotate(-6deg);background:#f2c230;padding:8px 12px;border-radius:4px;box-shadow:0 4px 8px rgba(0,0,0,.3);opacity:0">
+          <div class="lt-tag" style="font-size:17px;letter-spacing:.12em">FORWARD TO</div><div class="lt-tag" style="font-size:29px">rust-resizer</div></div>
+      </div>
+      <div class="lt-up" data-n="card" style="left:0;top:0;width:200px;height:128px;opacity:0">
+        <svg width="200" height="128" viewBox="0 0 150 96"><rect width="150" height="96" rx="4" fill="#fff8e8" stroke="#c9b79a" stroke-width="2"/><path d="M80 14 V82" stroke="#c9b79a" stroke-width="2"/>
+          <text x="14" y="40" font-family="Work Sans" font-size="20" font-weight="700" fill="#2b1c12">200 { }</text>
+          <text data-n="fills" x="14" y="70" font-family="Work Sans" font-size="15" font-weight="600" fill="#2f5b55" opacity="0">+ id, status</text></svg>
+      </div>
+    </div></div>
+  </div>
+  <div class="lt-lamp"></div>
+  <div class="lt-tilt top"></div>
+  <div class="lt-tilt bot"></div>
+  <div class="lt-vignette"></div>
+  <div class="lt-caption"><div class="lt-kicker">Fig. 1 &nbsp;·&nbsp; the resize, as a letter</div></div>
+</div>
+<script>
+(function () {
+  var root = document.querySelector('.f-letter'), q = function (s) { return root.querySelector(s); }, qa = function (s) { return root.querySelectorAll(s); };
+  var n = function (k) { return q('[data-n="' + k + '"]'); }, road = function (k) { return q('[data-r="' + k + '"]'); };
+  var F = window.__REEL.letter, at = F.cue, tl = gsap.timeline({ paused: true }), S = 'power3.out', IO = 'power3.inOut';
+  var NS = 'http://www.w3.org/2000/svg', roads = q('.lt-roads');
+
+  // A thing on the table rides one or more road strings; its foot point is the road point.
+  function ride(el, legs, t, dur, w, h) {
+    var ps = legs.map(function (d) { var p = document.createElementNS(NS, 'path'); p.setAttribute('d', d); p.setAttribute('fill', 'none'); roads.appendChild(p); return p; });
+    var ls = ps.map(function (p) { return p.getTotalLength(); }), sum = ls.reduce(function (a, b) { return a + b; }, 0), o = { v: 0 };
+    tl.fromTo(o, { v: 0 }, { v: 1, duration: dur, ease: IO, immediateRender: false, onUpdate: function () {
+      var d = o.v * sum, k = 0;
+      while (k < ls.length - 1 && d > ls[k]) { d -= ls[k]; k++; }
+      var pt = ps[k].getPointAtLength(Math.min(d, ls[k]));
+      el.style.left = (pt.x - w / 2) + 'px'; el.style.top = (pt.y - h) + 'px';
+    } }, t);
+  }
+  function place(el, x, y, w, h) { el.style.left = (x - w / 2) + 'px'; el.style.top = (y - h) + 'px'; }
+  function reveal(el, t, d) { tl.fromTo(el, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: d || .6, ease: S }, t); }
+  function stamp(el, t) { tl.fromTo(el, { opacity: 0, scale: 1.6 }, { opacity: 1, scale: 1, duration: .22, ease: 'expo.out' }, t); }
+  function lay(k, t, d) { var p = road(k), len = p.getTotalLength(); tl.set(p, { strokeDasharray: len, strokeDashoffset: len }, 0)
+    .set(p, { opacity: 1 }, t).to(p, { strokeDashoffset: 0, duration: d || .8, ease: IO }, t); }
+
+  var letter = n('letter'), card = n('card');
+  place(letter, 640, 1200, 200, 128);
+
+  // Establish: the camera settles on the model; the title types in word by word.
+  tl.fromTo(q('.lt-camera'), { scale: 1.42, y: 60 }, { scale: 1.24, y: 0, duration: 1.6, ease: 'power3.out' }, 0);
+  tl.fromTo(q('.lt-kicker'), { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: .5, ease: S }, .2);
+  [n('api'), n('api-sign'), n('api-shadow')].forEach(function (el) { tl.set(el, { opacity: 0 }, 0); });
+  tl.fromTo(letter, { opacity: 0 }, { opacity: 1, duration: .3 }, .1);
+
+  // Line 0: today the letter goes to the BFF, gets stamped RESIZED, and is filed at Media store.
+  var tSaves = at(0, 'saves'), tBff = at(0, 'BFF'), tVoided = at(0, 'resized');
+  ride(letter, [road('in').getAttribute('d'), road('old').getAttribute('d')], tSaves, Math.max(1.2, tBff + .3 - tSaves), 200, 128);
+  stamp(n('resized'), tVoided);
+  ride(letter, [road('bacc').getAttribute('d')], tVoided + .45, .9, 200, 128);
+
+  // Line 1: the flag goes on. The camera leans in on the sorting desk; the arm drops; the sticker goes on the next letter.
+  var tFlag = at(1, 'flag'), tOn = at(1, 'on'), tApi = at(1, 'rust-resizer'), tInstead = at(1, 'instead');
+  tl.to(q('.lt-camera'), { scale: 1.6, x: 180, y: -150, duration: .9, ease: IO }, at(1, 'resize') - .2);
+  tl.to(q('.lt-caption'), { opacity: 0, y: -20, duration: .5, ease: 'power2.in' }, at(1, 'resize') - .3);
+  tl.to(q('.lt-arm'), { rotation: 40, duration: .35, ease: 'power2.out' }, tOn);
+  tl.call(function () {}, null, tOn);
+  tl.set(q('.lt-flagstate'), { textContent: 'on' }, tOn);
+  tl.set(q('.lt-flagstate'), { textContent: 'off' }, 0);
+  // the next letter: back at the postbox, clean, with a forwarding sticker
+  tl.set(n('resized'), { opacity: 0 }, tFlag);
+  ride(letter, [road('bacc').getAttribute('d').replace(/^M720 420/, 'M1240 190')], tFlag, .01, 200, 128);
+  tl.set(letter, { opacity: 0 }, tFlag - .05).set(letter, { opacity: 1 }, tOn + .1);
+  ride(letter, ['M640 1200 L641 1199'], tFlag, .01, 200, 128);
+  stamp(n('sticker'), tOn + .25);
+  tl.to(q('.lt-camera'), { scale: 1.18, x: -60, y: 20, duration: .9, ease: IO }, at(1, 'saga'));
+  reveal(n('api'), tApi - .3, .7); reveal(n('api-sign'), tApi - .1); reveal(n('api-shadow'), tApi - .3);
+  lay('new', tApi - .1, .7); lay('aacc', tApi + .3, .7);
+  // the old address stays, quieter: crops still go there
+  tl.to([road('old'), n('bff'), n('bff-sign')], { opacity: .55, duration: .5 }, tApi + .2);
+  ride(letter, [road('in').getAttribute('d'), road('new').getAttribute('d')], at(1, 'calls'), Math.max(1.1, tInstead + .3 - at(1, 'calls')), 200, 128);
+
+  // Line 2: a postcard comes back, blank but for "200"; the client writes in the id and status.
+  var tReplies = at(2, 'replies'), tFills = at(2, 'fills');
+  tl.to(letter, { opacity: 0, duration: .25 }, tReplies - .1);
+  tl.set(card, { opacity: 1 }, tReplies);
+  ride(card, ['M1680 760 C1480 860 1200 900 1000 930 C860 1000 760 1100 640 1200'], tReplies, Math.max(1.2, tFills - tReplies - .1), 200, 128);
+  tl.fromTo(n('fills'), { opacity: 0 }, { opacity: 1, duration: .4 }, tFills + .1);
+  tl.to(q('.lt-camera'), { scale: 1.5, x: 250, y: -230, duration: 1.0, ease: IO }, tFills - .6);
+
+  tl.to({}, { duration: .01 }, F.duration - .01);
+  window.__timelines = window.__timelines || {};
+  window.__timelines.letter = tl;
+})();
+</script>
+</template>
+</body>
+</html>

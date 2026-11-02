@@ -1,0 +1,23 @@
+{
+  "title": "Resize changes stations",
+  "hook": "Resize changes stations.",
+  "look": "infographic",
+  "music": "modern cinematic tech explainer, warm synth arpeggio, soft punchy drums, airy pads, uplifting and confident, 110 bpm",
+  "scenes": [
+    {
+      "type": "concept",
+      "kind": "counter",
+      "heading": "Two stations",
+      "voice": "bm_george",
+      "labels": { "a": "Media BFF", "b": "rust-resizer", "barista": "the saga",
+        "steps": [{ "order": "resize", "to": "a" }, { "order": "resize", "to": "b" }, { "order": "crop", "to": "a" }, { "order": "resize", "to": "a" }] },
+      "lines": [
+        { "say": "The saga routes orders. Every resize goes to the BFF." },
+        { "say": "With the resize flag on, resizes go to rust-resizer." },
+        { "say": "Crops still go to the BFF." },
+        { "say": "Turn the flag off and resizes go back. Check that path." }
+      ]
+    },
+    { "type": "card", "text": "Resize changes stations.", "sub": "Crop stays put. Flag off reverts.", "start_here": "resizeOrCropImage.sagas.ts" }
+  ]
+}

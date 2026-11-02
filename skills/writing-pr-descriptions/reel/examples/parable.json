@@ -1,0 +1,21 @@
+{
+  "title": "Two roads for resize",
+  "hook": "Two roads for resize.",
+  "look": "notebook",
+  "music": "playful curious explainer music, light pizzicato strings, soft marimba and warm synth pad, gentle groove, 100 bpm",
+  "scenes": [
+    {
+      "type": "story",
+      "heading": "Two roads",
+      "voice": "bm_george",
+      "lines": [
+        { "say": "The old road: resize is a BFF save.", "picture": ["hills", "road"] },
+        { "say": "The new road goes straight to rust-resizer. The resize flag picks the road.", "picture": ["fork", "flag"] },
+        { "say": "Both roads end at the Media store.", "picture": ["castle"] },
+        { "say": "Flag off, and resize takes the old road. Crop never left it.",
+          "moral": "Check: flag off, crop on the BFF, error toasts.", "picture": ["messenger"] }
+      ]
+    },
+    { "type": "card", "text": "Two roads. One destination.", "sub": "Flag off: the old road.", "start_here": "resizeOrCropImage.sagas.ts" }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "title": "Resize, a tragedy in one act",
+  "tone": "humour",
+  "humour": { "genre": "none" },
+  "hook": "Act one. A resize arrives.",
+  "look": "paper",
+  "music": "playful curious explainer music, light pizzicato strings, soft marimba and warm synth pad, gentle groove, 100 bpm",
+  "scenes": [
+    {
+      "type": "cast",
+      "stage": "theatre",
+      "heading": "Act one, at the fork",
+      "cast": [
+        { "id": "saga", "name": "media-ui saga", "role": "neutral", "voice": "am_michael" },
+        { "id": "bff", "name": "Media BFF", "role": "changed", "voice": "bm_george" },
+        { "id": "api", "name": "rust-resizer", "role": "added", "voice": "bf_emma" }
+      ],
+      "lines": [
+        { "who": "saga", "direction": "Enter the saga, bearing a resize", "say": "I bear a resize. Whither, good sirs?" },
+        { "who": "bff", "direction": "The BFF, from habit", "say": "To me, as ever: a save, with status RESIZED." },
+        { "who": "api", "enter": true, "direction": "Enter rust-resizer", "say": "Not while the resize flag is on. Then it comes to me." },
+        { "who": "bff", "dim": true, "direction": "The BFF, gracious in defeat",
+          "say": "Take it. Crop stays mine, and resize returns if the flag goes off." }
+      ]
+    },
+    { "type": "card", "text": "Exit resize, pursued by a toggle.", "sub": "Flag off: back to the BFF." }
+  ]
+}

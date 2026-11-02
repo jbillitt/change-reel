@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"></head>
+<body>
+<template>
+<style>
+  #root { position: absolute; inset: 0; overflow: hidden; }
+  .op-wall { position: absolute; inset: 0; background: radial-gradient(1000px 700px at 30% 20%, #8a5a33 0%, #4a2f1e 50%, #1e130c 100%); }
+  .op-desk { position: absolute; left: -80px; right: -80px; bottom: -40px; height: 470px; transform-origin: 50% 100%; transform: perspective(1400px) rotateX(48deg);
+    background: linear-gradient(#6b4630, #4a2f1f); border-radius: 24px; box-shadow: inset 0 30px 60px rgba(255,200,140,.18); }
+  .op-desk::after { content: ""; position: absolute; inset: 0; border-radius: 24px; opacity: .35;
+    background: repeating-linear-gradient(92deg, rgba(0,0,0,.18) 0 3px, transparent 3px 46px); }
+  .op-env { position: absolute; left: 1080px; top: 470px; width: 520px; height: 330px; transform-origin: 50% 100%; }
+  .op-env svg { filter: drop-shadow(0 30px 30px rgba(0,0,0,.45)); }
+  .op-sticker { position: absolute; left: 40px; top: -60px; padding: 18px 26px; background: #f2c230; border-radius: 8px; transform: rotate(-7deg);
+    box-shadow: 0 10px 20px rgba(0,0,0,.35); color: #2b1c12; font: 700 54px/1 "Work Sans", sans-serif; }
+  .op-sticker small { display: block; font: 600 22px/1 "Work Sans", sans-serif; letter-spacing: .18em; margin-bottom: 8px; }
+  .op-kicker { position: absolute; left: 96px; top: 150px; font: 500 24px/1 "Work Sans", sans-serif; letter-spacing: .22em; text-transform: uppercase; color: #e8c79a; }
+  .op-hero { position: absolute; left: 90px; top: 200px; font: 500 150px/.95 "Fraunces", Georgia, serif; letter-spacing: -.015em; color: #f4ead8; }
+  .op-ln { display: block; overflow: hidden; padding-bottom: .1em; }
+  .op-w { display: inline-block; margin-right: .2em; }
+  .op-it { font-style: italic; color: #f2c230; }
+  .op-lamp { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: soft-light; background: radial-gradient(1000px 700px at 62% 52%, rgba(255,214,160,.9), rgba(255,214,160,0) 70%); }
+  .op-tilt { position: absolute; left: 0; right: 0; height: 240px; backdrop-filter: blur(6px); pointer-events: none; }
+  .op-tilt.top { top: 0; mask-image: linear-gradient(#000, transparent); -webkit-mask-image: linear-gradient(#000, transparent); }
+  .op-tilt.bot { bottom: 0; mask-image: linear-gradient(transparent, #000); -webkit-mask-image: linear-gradient(transparent, #000); }
+  .op-dust { position: absolute; width: 4px; height: 4px; border-radius: 50%; background: rgba(255,230,190,.6); }
+</style>
+<div id="root" class="f-open" data-composition-id="open" data-width="1920" data-height="1080">
+  <div class="op-wall"></div>
+  <div class="op-desk"></div>
+  <div class="op-env">
+    <svg width="520" height="330" viewBox="0 0 520 330"><rect width="520" height="330" rx="14" fill="#fbf6ea" stroke="#c9b79a" stroke-width="3"/>
+      <path d="M8 14 L260 186 L512 14" fill="none" stroke="#c9b79a" stroke-width="3"/><rect x="398" y="30" width="86" height="100" fill="#d63a2e"/>
+      <circle cx="441" cy="80" r="26" fill="none" stroke="#fbf6ea" stroke-width="4" opacity=".7"/>
+      <text x="44" y="262" font-family="Work Sans" font-size="40" font-weight="700" fill="#2b1c12">RESIZE</text>
+      <text x="44" y="300" font-family="Work Sans" font-size="28" font-weight="500" fill="#5a4330">Media BFF</text>
+      <line class="op-strike" x1="40" y1="292" x2="210" y2="292" stroke="#b3261e" stroke-width="5" stroke-linecap="round"/></svg>
+    <div class="op-sticker"><small>FORWARD TO</small>rust-resizer</div>
+  </div>
+  <div class="op-lamp"></div>
+  <div class="op-kicker">change &nbsp;·&nbsp; resize</div>
+  <div class="op-hero">
+    <span class="op-ln"><span class="op-w">Same</span><span class="op-w">resize.</span></span>
+    <span class="op-ln"><span class="op-w op-it">A</span><span class="op-w op-it">new</span><span class="op-w op-it">route.</span></span>
+  </div>
+  <div class="op-tilt top"></div><div class="op-tilt bot"></div>
+</div>
+<script>
+(function () {
+  var root = document.querySelector('.f-open'), q = function (s) { return root.querySelector(s); }, qa = function (s) { return root.querySelectorAll(s); };
+  var F = window.__REEL.open, tl = gsap.timeline({ paused: true }), S = 'power3.out';
+  // Dust in the lamp light: placed from the index, never at random, so every render is the same.
+  for (var i = 0; i < 26; i++) { var d = document.createElement('div'); d.className = 'op-dust';
+    d.style.left = (980 + ((i * 137) % 640)) + 'px'; d.style.top = (260 + ((i * 89) % 420)) + 'px'; d.style.opacity = .25 + (i % 5) / 10; root.appendChild(d);
+    tl.fromTo(d, { y: 0, x: 0 }, { y: -30 - (i % 7) * 6, x: (i % 3 - 1) * 14, duration: F.duration, ease: 'none' }, 0); }
+  // The letter rises into the lamp light as the words land.
+  tl.fromTo(q('.op-env'), { y: 160, rotation: -5, scale: .9, opacity: 0 }, { y: 0, rotation: -2, scale: 1, opacity: 1, duration: .9, ease: S }, .05);
+  tl.fromTo(q('.op-kicker'), { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: .5, ease: S }, .15);
+  var words = qa('.op-w');
+  [.25, .38, 1.0, 1.12, 1.24].forEach(function (t, k) { tl.fromTo(words[k], { yPercent: 135 }, { yPercent: 0, duration: .7, ease: S }, t); });
+  // On "A new route.", the old address is struck through and the sticker slaps on, knocking the letter.
+  var strike = q('.op-strike'), len = 170;
+  tl.fromTo(strike, { strokeDasharray: len, strokeDashoffset: len, opacity: 0 }, { strokeDashoffset: 0, opacity: 1, duration: .35, ease: 'power2.out' }, 1.05);
+  tl.fromTo(q('.op-sticker'), { scale: 1.9, opacity: 0, rotation: -18 }, { scale: 1, opacity: 1, rotation: -7, duration: .3, ease: 'expo.out' }, 1.35);
+  tl.to(q('.op-env'), { x: -12, duration: .08, ease: 'power1.out' }, 1.45).to(q('.op-env'), { x: 0, duration: .3, ease: S }, 1.53);
+  tl.to({}, { duration: .01 }, F.duration - .01);
+  window.__timelines = window.__timelines || {};
+  window.__timelines.open = tl;
+})();
+</script>
+</template>
+</body>
+</html>
