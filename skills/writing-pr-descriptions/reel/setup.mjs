@@ -63,11 +63,11 @@ function main() {
   if (!findChrome()) actions.push('Install Google Chrome, or set REEL_CHROME to a Chrome or Chromium binary');
   else ok.push('chrome');
 
-  const py = win ? 'py' : 'python3';
-  const pyPre = win ? ['-3'] : [];
-  if (out(py, [...pyPre, '-c', 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)']) === null) {
-    actions.push('Install Python 3.10 or later');
-  } else ok.push('python 3.10+');
+  const py = win ? 'py' : 'python3.12';
+  const pyPre = win ? ['-3.12'] : [];
+  if (out(py, [...pyPre, '-c', 'import sys; sys.exit(0 if sys.version_info[:2] == (3, 12) else 1)']) === null) {
+    actions.push('Install Python 3.12 (winget install Python.Python.3.12)');
+  } else ok.push('python 3.12');
 
   if (actions.length) return report('needs_action', ok, actions);
   if (check) {

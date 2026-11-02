@@ -19,7 +19,7 @@ The skill (`writing-pr-descriptions`) triggers when you ask Claude to write or u
 
 ## Change reel set-up
 
-Diagrams and prose need nothing extra. Reels need Node.js 22.12+, Python 3.10+, FFmpeg, Google Chrome and `gh` 2.99+. From the installed skill folder:
+Diagrams and prose need nothing extra. Reels need Node.js 22.12+, Python 3.12, FFmpeg, Google Chrome and `gh` 2.99+. From the installed skill folder:
 
 ```bash
 node reel/setup.mjs --check          # what is missing
