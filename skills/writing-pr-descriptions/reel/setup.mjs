@@ -30,7 +30,8 @@ export const LOCKDOWN = {
 
 export function findChrome() {
   const c = [process.env.REEL_CHROME,
-    'C:/Program Files/Google/Chrome/Application/chrome.exe',
+    ...[process.env.ProgramFiles, process.env['ProgramFiles(x86)'], process.env.LOCALAPPDATA]
+      .filter(Boolean).map((d) => join(d, 'Google/Chrome/Application/chrome.exe')),
     '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     '/usr/bin/google-chrome', '/usr/bin/chromium'].filter(Boolean);
   return c.find((p) => existsSync(p)) || null;
