@@ -1,6 +1,6 @@
 // Build a change reel from reel.json: voice each line, time scenes to the audio, render to MP4. Local only.
 // Usage: node build-reel.mjs <reel.json> <out.mp4> [--silent]
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -232,6 +232,61 @@ const CUE = `F.cue = function (line, word, end) {
   return end ? l.words[i].end : l.words[i].start;
 };`;
 
+// Effects that fill the room. At most one in 6 s, and max(2, total / 15) in a reel.
+export const BIG = new Set(['sparkle', 'chime', 'notification', 'riser', 'impact-bass', 'impact-bass-1', 'impact-bass-2', 'whoosh-cinematic']);
+
+// Keep the cues a viewer can hear as separate events. Author cues (a line's sfx) are placed before automatic ones,
+// each in time order; a cue that breaks a rule is dropped and logged, and a dropped cue never counts towards a limit.
+export function budgetCues(cues, total) {
+  const cap = Math.max(2, Math.ceil(total / 15)), kept = [];
+  const order = [...cues].sort((a, b) => (a.auto ? 1 : 0) - (b.auto ? 1 : 0) || a.at - b.at);
+  for (const c of order) {
+    const big = BIG.has(c.name), near = (s) => kept.filter((k) => Math.abs(k.at - c.at) < s);
+    // Every 2 s window that holds c starts at c itself or at a kept cue less than 2 s before it.
+    const crowded = [c.at, ...near(2).map((k) => k.at).filter((t) => t < c.at)]
+      .some((s) => kept.filter((k) => k.at >= s && k.at < s + 2).length >= 3);
+    // A repeated ping steps through the chord (1, 5, 3), so a run of ticks reads as a phrase, not a copy.
+    const why = c.name !== 'ping' && near(big ? 8 : 1.2).some((k) => k.name === c.name) ? `the same effect within ${big ? 8 : 1.2} s`
+      : crowded ? 'more than 3 effects in 2 s'
+      : big && near(6).some((k) => BIG.has(k.name)) ? 'more than one big effect in 6 s'
+      : big && kept.filter((k) => BIG.has(k.name)).length >= cap ? `more than ${cap} big effects in a ${total} s reel`
+      : null;
+    if (why) console.warn(`reel: dropped sfx ${c.name} at ${c.at.toFixed(2)}s: ${why}`); else kept.push(c);
+  }
+  return kept.sort((a, b) => a.at - b.at);
+}
+
+// Bundled effects differ by over 30 LU, so each is gained to a common loudness before its authored vol.
+const SFX_REF = -18, SFX_MAX_GAIN = 4;
+let levels = null;
+// A file's loudest 400 ms (max momentary loudness), cached by content. Padding gives short files a full window.
+function sfxLevel(file) {
+  const cacheFile = join(CACHE, 'sfx-levels.json');
+  if (!levels) { try { levels = JSON.parse(readFileSync(cacheFile, 'utf8')); } catch { levels = {}; } }
+  const sha = createHash('sha1').update(readFileSync(file)).digest('hex');
+  if (levels[sha] === undefined) {
+    const r = spawnSync('ffmpeg', ['-hide_banner', '-nostats', '-i', file, '-af', 'apad=pad_dur=0.5,ebur128', '-f', 'null', '-'], { encoding: 'utf8' });
+    const m = [...(r.stderr || '').matchAll(/\bM:\s*(-?\d+(?:\.\d+)?)/g)].map((x) => +x[1]);
+    if (!m.length) throw new Error(`could not measure the loudness of ${file}`);
+    levels[sha] = Math.max(...m);
+    mkdirSync(CACHE, { recursive: true });
+    writeFileSync(cacheFile, JSON.stringify(levels, null, 1));
+  }
+  return levels[sha];
+}
+export const sfxGain = (vol, level) => Math.min(SFX_MAX_GAIN, vol * 10 ** ((SFX_REF - level) / 20));
+
+// Bundle a three entry into an IIFE once per three version and entry content (r160+ ship no UMD build).
+async function bundleThree(entry) {
+  const src = join(here, entry), version = JSON.parse(readFileSync(join(here, 'node_modules', 'three', 'package.json'), 'utf8')).version;
+  const out = join(CACHE, 'lib', `${entry.replace(/\.js$/, '')}-${version}-${createHash('sha1').update(readFileSync(src)).digest('hex').slice(0, 8)}.global.js`);
+  if (!existsSync(out)) {
+    const { build } = await import('esbuild');
+    await build({ entryPoints: [src], bundle: true, format: 'iife', minify: true, legalComments: 'eof', outfile: out, absWorkingDir: here, logLevel: 'error' });
+  }
+  return out;
+}
+
 // An opt-in voice server on this machine with an OpenAI-style speech endpoint.
 async function speakHttp(jobs) {
   const url = new URL(process.env.REEL_TTS_URL || 'http://127.0.0.1:3900/v1/audio/speech');
@@ -335,6 +390,19 @@ async function main() {
     });
     if (total > 60 && !snapAt) console.warn('reel: ' + total + 's is over the 60 s cap; cut lines before the full render (about 2.4 spoken words a second).');
 
+    // ffmpeg with a filter graph and one [out]. A long graph goes in a file: Windows caps a command line at 32k characters.
+    const ffmpeg = (ins, graph, out) => {
+      const g = graph.length > 6000 ? (writeFileSync(join(proj, out + '.graph'), graph), ['-filter_complex_script', out + '.graph']) : ['-filter_complex', graph];
+      run('ffmpeg', ['-v', 'error', '-y', ...ins, ...g, '-map', '[out]', '-t', String(total), out], proj);
+    };
+    // One voice stem: the music and the effects both duck under it.
+    const voiceWav = clips.length ? 'audio/voice.wav' : null;
+    if (voiceWav) ffmpeg(clips.flatMap((c) => ['-i', c.src]), clips.map((c, i) =>
+      `[${i}:a]aresample=44100,aformat=channel_layouts=stereo,adelay=${Math.round(c.start * 1000)}:all=1[v${i}]`).join(';')
+      + `;${clips.map((_, i) => `[v${i}]`).join('')}amix=inputs=${clips.length}:normalize=0,apad,atrim=0:${total}[out]`, voiceWav);
+
+    // Tonal effects follow the bed's key; with no procedural bed, any key fits.
+    let tonal = { key: 60, third: 4 };
     if (!silent && spec.music) {
       const dir = join(CACHE, 'music');
       mkdirSync(dir, { recursive: true });
@@ -345,7 +413,9 @@ async function main() {
         musicIn = join(proj, 'audio', 'bed.wav');
         run(VENV_PY, [join(here, 'music_procedural.py'), spec.music.style, String(total), musicIn,
           '--seed', String(spec.music.seed ?? spec.seed ?? spec.pr ?? spec.title), '--cues', cuts.join(','),
-          ...(spec.music.bpm ? ['--bpm', String(spec.music.bpm)] : [])], proj);
+          '--events', join(proj, 'audio', 'bed.json'), ...(spec.music.bpm ? ['--bpm', String(spec.music.bpm)] : [])], proj);
+        const bed = JSON.parse(readFileSync(join(proj, 'audio', 'bed.json'), 'utf8'));
+        tonal = { key: bed.key, third: bed.third };
       } else {
         // MusicGen beds take minutes on CPU, so each is cached by prompt and length (in 10 s steps, so it never loops).
         const secs = Math.ceil(total / 10) * 10;
@@ -356,32 +426,32 @@ async function main() {
 
     let music = '';
     if (musicIn) {
-      // Loop and fade the bed, then duck it under the voices with a sidechain compressor.
-      const ins = ['-stream_loop', '-1', '-i', musicIn];
-      const legs = [];
-      clips.forEach((c, i) => {
-        ins.push('-i', join(proj, c.src));
-        legs.push(`[${i + 1}:a]aresample=44100,adelay=${Math.round(c.start * 1000)}:all=1[v${i}]`);
-      });
+      // Loop and fade the bed, then duck it under the voice with a sidechain compressor.
       const fade = `afade=t=in:d=0.8,afade=t=out:st=${Math.max(0, total - 2)}:d=2`;
-      const graph = clips.length
-        ? [`[0:a]aresample=44100,atrim=0:${total},${fade}[bed]`, ...legs,
-          `${clips.map((_, i) => `[v${i}]`).join('')}amix=inputs=${clips.length}:normalize=0,apad[vo]`,
-          '[bed][vo]sidechaincompress=threshold=0.015:ratio=9:attack=25:release=420[out]'].join(';')
-        : `[0:a]aresample=44100,atrim=0:${total},${fade}[out]`;
-      run('ffmpeg', ['-v', 'error', '-y', ...ins, '-filter_complex', graph, '-map', '[out]', '-t', String(total), 'audio/music.wav'], proj);
+      ffmpeg(['-stream_loop', '-1', '-i', musicIn, ...(voiceWav ? ['-i', voiceWav] : [])], voiceWav
+        ? `[0:a]aresample=44100,atrim=0:${total},${fade}[bed];[1:a]aresample=44100[vo];[bed][vo]sidechaincompress=threshold=0.015:ratio=9:attack=25:release=420[out]`
+        : `[0:a]aresample=44100,atrim=0:${total},${fade}[out]`, 'audio/music.wav');
       music = `<audio data-start="0" data-duration="${total}" data-track-index="9" data-volume="0.3" src="audio/music.wav"></audio>`;
     }
 
-    // Sound effects (bundled with HyperFrames, Pixabay licence), cued from the same clock as the stage.
+    // Sound effects: in-key bells written for this reel, else the HyperFrames bundle (Pixabay licence).
     const sfxDir = join(mods, 'hyperframes', 'dist', 'skills', 'media-use', 'audio', 'assets', 'sfx');
+    const tonalDir = join(proj, 'audio', 'tonal');
+    if (!silent) run(VENV_PY, [join(here, 'sfx_tonal.py'), tonalDir, '--key', String(tonal.key), '--third', String(tonal.third)], proj);
+    const sfxPath = (name) => [join(tonalDir, name + '.wav'), join(sfxDir, name + '.mp3')].find((f) => existsSync(f));
+    // A cue that plays again takes its next variant (name, name-1, name-2), so repeats never sound copied.
+    const variants = (name) => [name, `${name}-1`, `${name}-2`, `${name}-3`].map(sfxPath).filter(Boolean);
     const sfx = [];
-    const cue = (name, at, vol) => {
-      if (!existsSync(join(sfxDir, name + '.mp3'))) return console.warn(`reel: no sound effect named ${name}; skipped`);
-      if (!silent && at >= 0) sfx.push({ name, at, vol });
+    const cue = (name, at, vol, auto = true) => {
+      if (!variants(name).length) return console.warn(`reel: no sound effect named ${name}; skipped`);
+      if (!silent && at >= 0 && at < total) sfx.push({ name, at, vol, auto });
     };
-    // Every cue sits on a visible event: a cut, an item landing, a lever moving. No ambient beds or risers.
-    cue('whoosh-short', OPEN - 0.22, 0.35);
+    // Every cue sits on a visible event: a moving transition, an item landing, a lever moving. A plain cut,
+    // a dip or an iris stays dry: the procedural bed already marks cuts on the beat.
+    const ARRIVE = { push: 'whoosh-short', 'push-up': 'whoosh-short', wipe: 'whoosh-short', blinds: 'whoosh-short', zoom: 'whoosh-short', blur: 'whoosh-short', glitch: 'glitch' };
+    spec.scenes.forEach((sc, i) => {
+      if ((i > 0 || OPEN > 0) && ARRIVE[sc.transition]) cue(ARRIVE[sc.transition], sc.start - Math.min(0.22, sc.tin / 2), sc.transition === 'glitch' ? 0.25 : 0.3);
+    });
     // When each concept step's motion lands, relative to the step start (line start + 20% of the line).
     const STEP_SFX = {
       basket: (q) => q.add ? [['pop', 0.72, 0.45]] : q.remove ? [['whoosh-short', 0.05, 0.25]] : q.receipt ? [['typing', 0.3, 0.2]] : [],
@@ -392,9 +462,7 @@ async function main() {
       gate: () => [['click', 0, 0.4]],
       points: () => [['click', 0, 0.4]],
     };
-    spec.scenes.forEach((sc, i) => {
-      const next = spec.scenes[i + 1];
-      if (next) cue('whoosh-short', sc.end - 0.22, 0.3);
+    spec.scenes.forEach((sc) => {
       const steps = sc.labels?.steps || [];
       (sc.lines || []).forEach((l, li) => {
         if (sc.type === 'concept' && STEP_SFX[sc.kind]) {
@@ -405,30 +473,42 @@ async function main() {
         // Custom scenes name their own cues: "sfx": [{ "name": "pop", "at": 0.6 }], at as a fraction of the line.
         // "word" places the cue on a spoken word instead (plus "offset" seconds), where frames reveal things.
         for (const s of l.sfx || []) {
-          const w = s.word && l.words.find((x) => x.w.toLowerCase().replace(/[^a-z0-9-]/g, '').startsWith(String(s.word).toLowerCase()));
+          const bare = (x) => String(x).toLowerCase().replace(/[^a-z0-9-]/g, '');
+          const w = s.word && l.words.find((x) => bare(x.w).startsWith(bare(s.word)));
           if (s.word && !w) console.warn(`reel: sfx word "${s.word}" is not in "${l.say}"`);
-          cue(s.name, w ? w.start + (s.offset || 0) : l.start + l.len * (s.at || 0), s.vol ?? 0.35);
+          cue(s.name, w ? w.start + (s.offset || 0) : l.start + l.len * (s.at || 0), s.vol ?? 0.35, false);
         }
       });
       for (const l of sc.lines || []) {
         if (sc.type === 'cast' && l.enter) cue('whoosh-short', l.start - 0.55, 0.25);
         if (sc.type === 'cast' && l.carry) { const t0 = l.start + l.len * 0.45; cue('whoosh-short', t0 + 0.15, 0.22); cue('pop', t0 + 1.12, 0.45); }
         if (sc.type === 'code') cue('typing', l.start + 0.15, 0.22);
-        if (sc.type === 'board' && l.box) cue('sparkle', l.start + Math.min(l.len * 0.72, 2.4) + 0.1, 0.32);
+        if (sc.type === 'board' && l.box) cue('chime', l.start + Math.min(l.len * 0.72, 2.4) + 0.1, 0.32);
         if (sc.type === 'user' && l.show === 'after') { cue('click', l.start + 0.78, 0.5); cue('pop', l.start + 1.05, 0.3); }
       }
     });
-    const manifest = JSON.parse(readFileSync(join(sfxDir, 'manifest.json'), 'utf8'));
-    const sfxLen = (name) => (Array.isArray(manifest) ? manifest : Object.values(manifest.files || manifest))
-      .find((m) => m.file === name + '.mp3').duration;
-    for (const s of new Set(sfx.map((x) => x.name))) copyFileSync(join(sfxDir, s + '.mp3'), join(proj, 'audio', s + '.mp3'));
+    // One effects stem: budget, rotate variants, level each file, then mix, duck under the voice and limit.
+    const played = {};
+    const kept = budgetCues(sfx, total).map((c) => {
+      const v = variants(c.name), file = v[(played[c.name] = (played[c.name] ?? -1) + 1) % v.length];
+      return { ...c, file, gain: sfxGain(c.vol, sfxLevel(file)) };
+    });
+    let sfxTag = '';
+    if (kept.length) {
+      const n = kept.length;
+      ffmpeg([...kept.flatMap((c) => ['-i', c.file]), ...(voiceWav ? ['-i', voiceWav] : [])], [
+        ...kept.map((c, i) => `[${i}:a]aresample=44100,aformat=channel_layouts=stereo,volume=${c.gain.toFixed(4)},adelay=${Math.round(c.at * 1000)}:all=1[s${i}]`),
+        `${kept.map((_, i) => `[s${i}]`).join('')}amix=inputs=${n}:normalize=0[mix]`,
+        voiceWav ? `[${n}:a]aresample=44100,aformat=channel_layouts=stereo[vo];[mix][vo]sidechaincompress=threshold=0.03:ratio=3:attack=5:release=250[duck]` : '[mix]anull[duck]',
+        // level=0: alimiter otherwise lifts its output back to full scale.
+        `[duck]alimiter=limit=0.5:level=0,apad,atrim=0:${total}[out]`,
+      ].join(';'), 'audio/sfx.wav');
+      sfxTag = `<audio data-start="0" data-duration="${total}" data-track-index="3" data-volume="1" src="audio/sfx.wav"></audio>`;
+    }
 
     const audio = clips.map((c, i) =>
       `<audio data-start="${c.start.toFixed(2)}" data-duration="${c.len.toFixed(2)}" data-track-index="${1 + (i % 2)}" data-volume="1" src="${c.src}"></audio>`
-    ).concat(sfx.map((s, i) => {
-      const len = Math.min(sfxLen(s.name), total - s.at);
-      return `<audio data-start="${s.at.toFixed(2)}" data-duration="${len.toFixed(2)}" data-track-index="${3 + (i % 5)}" data-volume="${s.vol}" src="audio/${s.name}.mp3"></audio>`;
-    })).join('\n') + '\n' + music;
+    ).concat(sfxTag).join('\n') + '\n' + music;
 
     // Fonts ship as files from local npm packages, so the reel looks the same on every OS.
     mkdirSync(join(proj, 'fonts'), { recursive: true });
@@ -477,6 +557,7 @@ async function main() {
         if (!/<template[\s>]/.test(html)) throw new Error(`${sc.src}: a frame is a sub-composition, so everything goes inside <template>`);
         if (!html.includes(`data-composition-id="${sc.id}"`)) throw new Error(`${sc.src}: its root needs data-composition-id="${sc.id}" (the scene id)`);
         offline(html, sc.src);
+        if (html.includes('THREE_MODERN')) libs.add('three-modern');
         // The timings go inside the frame itself: a sub-composition gets copies of host data, not its functions.
         const data = JSON.stringify(frameData[sc.id]).replace(/</g, '\\u003c');
         const boot = `<script>(function () { var R = window.__REEL = window.__REEL || {}, F = R[${JSON.stringify(sc.id)}] = ${data};\n${CUE}\n})();</script>`;
@@ -499,8 +580,15 @@ async function main() {
       }
       mounts.push(`<div class="fw" id="fw-${i}">${inner.join('')}</div>`);
     }
-    if (libs.has('three')) copyFileSync(join(mods, 'three', 'build', 'three.min.js'), join(proj, 'three.min.js'));
-    const libTags = libs.has('three') ? '<script src="three.min.js"></script>' : '';
+    // Registry blocks get window.THREE (the r147 look); lit 3D frames get window.THREE_MODERN. Separate bundles, so
+    // the r147 patches never reach a modern frame.
+    let libTags = '';
+    for (const [lib, entry] of [['three', 'three-global.js'], ['three-modern', 'three-modern.js']]) {
+      if (!libs.has(lib)) continue;
+      copyFileSync(await bundleThree(entry), join(proj, lib + '.js'));
+      libTags += `<script src="${lib}.js"></script>`;
+    }
+    if (libs.has('three-modern')) { copyFileSync(join(here, 'lit.js'), join(proj, 'lit.js')); libTags += '<script src="lit.js"></script>'; }
 
     const html = readFileSync(join(here, 'stage.html'), 'utf8')
       .replace('{{FRAMES}}', () => mounts.join('\n'))
@@ -512,7 +600,9 @@ async function main() {
         copyFileSync(resolve(dirname(resolve(specPath)), x.src), join(proj, 'custom-' + i + '.js'));
         return '<script src="custom-' + i + '.js"></script>';
       }).join('\n'))
-      .replace('{{SPEC}}', () => JSON.stringify(spec).replace(/</g, '\\u003c'));
+      .replace('{{SPEC}}', () => JSON.stringify(spec).replace(/</g, '\\u003c'))
+      // Snapshots are the check pass: mark overlaps, off-frame and early text on the PNGs themselves.
+      .replace('{{LINT}}', () => snapAt && process.env.REEL_LINT !== '0' ? (copyFileSync(join(here, 'lint.js'), join(proj, 'lint.js')), '<script src="lint.js"></script>') : '');
     writeFileSync(join(proj, 'index.html'), html);
 
     if (snapAt) hyperframes(['snapshot', '--at', snapAt, '--no-end', '--describe', 'false', '-o', resolve(outPath), '.'], proj);

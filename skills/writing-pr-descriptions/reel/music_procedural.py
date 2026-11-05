@@ -1133,6 +1133,6 @@ mix /= np.max(np.abs(mix)) + 1e-9
 wavfile.write(A.out, SR, (mix[: int(A.seconds * SR)] * 0.89 * 32767).astype(np.int16))
 if A.events:
     with open(A.events, "w") as f:
-        json.dump({"style": ST, "bpm": bpm, "key": key, "swing": float(SWING), "home": home, "bars": bars,
+        json.dump({"style": ST, "bpm": bpm, "key": key, "third": SCALE[ST][2], "swing": float(SWING), "home": home, "bars": bars,
                    "accents": accents, "events": sorted(events, key=lambda e: e["t"])}, f)
 print(f"{A.out}: {ST}, {bpm:.0f} bpm, key {key}, form {form}, lead {voice}, {on_beat}/{len(cues)} cuts on the beat, {A.seconds:.1f}s")

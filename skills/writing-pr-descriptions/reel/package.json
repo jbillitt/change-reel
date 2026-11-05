@@ -7,9 +7,10 @@
     "@fontsource-variable/archivo": "5.3.0",
     "@fontsource/caveat": "5.3.0",
     "@fontsource/jetbrains-mono": "5.3.0",
+    "esbuild": "0.25.12",
     "gsap": "3.15.0",
     "hyperframes": "0.8.138",
     "shiki": "4.5.0",
-    "three": "0.147.0"
+    "three": "0.187.0"
   }
 }

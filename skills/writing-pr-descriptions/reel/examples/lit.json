@@ -1,0 +1,27 @@
+{
+  "title": "Resize moves to rust-resizer",
+  "coldOpen": false,
+  "chapters": false,
+  "look": "diorama",
+  "scenario": { "world": "redirect-sticker", "telling": "time-lapse", "design": "diorama" },
+  "music": { "style": "jazz" },
+  "scenes": [
+    {
+      "type": "frame",
+      "id": "lit",
+      "src": "./frames/lit.html",
+      "voice": "bm_george",
+      "hold": 0.8,
+      "lines": [
+        {
+          "say": "With the resize flag on, the saga sends the letter to rust-resizer instead.",
+          "sfx": [
+            { "name": "click", "word": "flag", "offset": 0.1 },
+            { "name": "whoosh-short", "word": "sends" },
+            { "name": "chime", "word": "instead" }
+          ]
+        }
+      ]
+    }
+  ]
+}
